@@ -1,11 +1,14 @@
-from nizkpauth.profiles import Profile, ProverProfile
+import json
+import os
+
+import pytest
+
 from nizkpauth.crypto.curves import Curve
 from nizkpauth.crypto.hashes import Hash
-from nizkpauth.exceptions import InvalidProfileFormat
-
-import os
-import json
-import pytest
+from nizkpauth.exceptions import (InvalidCurveError,
+                                  InvalidHashCurveCombinationError,
+                                  InvalidHashError, InvalidProfileFormat)
+from nizkpauth.profiles import Profile, ProverProfile
 
 
 class TestProverProfileWithValidInput:
@@ -16,7 +19,7 @@ class TestProverProfileWithValidInput:
 
     def test_creation_with_valid_parameters(self):
         try:
-            profile = ProverProfile(self.user_id, self.curve, self.hash)
+            profile = ProverProfile(user_id=self.user_id, curve=self.curve, hash=self.hash)
             profile.generate_keys()
 
         except Exception as e:
@@ -38,7 +41,7 @@ class TestProverProfileWithValidInput:
 
     def test_to_dict_conversion(self):
         try:
-            profile = ProverProfile(self.user_id, self.curve, self.hash)
+            profile = ProverProfile(user_id=self.user_id, curve=self.curve, hash=self.hash)
             profile.generate_keys()
             profile_dict = profile.to_dict()
 
@@ -80,7 +83,7 @@ class TestProverProfileWithValidInput:
     def test_save_in_file(self):
         test_path = 'profiles/test.json'
         try:
-            profile = ProverProfile(self.user_id, self.curve, self.hash)
+            profile = ProverProfile(user_id=self.user_id, curve=self.curve, hash=self.hash)
             profile.generate_keys()
             profile.save_to_file(test_path)
 
@@ -132,4 +135,22 @@ class TestProfileWithInvalidInput:
         with pytest.raises(InvalidProfileFormat):
             profile = ProverProfile.load_from_file(self.filepath_public)
 
-    ...
+    def test_invalid_hash(self):
+
+        with pytest.raises(InvalidHashError):
+            curve = Curve("p256")
+            hash = Hash("Non existing hash")
+            profile = ProverProfile(user_id='user', curve=curve, hash=hash)
+
+    def test_invalid_curve(self):
+        with pytest.raises(InvalidCurveError):
+            curve = Curve("Non existing curve")
+            hash = Hash("sha256")
+            profile = ProverProfile(user_id='user', curve=curve, hash=hash)
+
+
+    def test_invalid_hash_curve_combination(self):
+        curve = Curve("p256")
+        hash = Hash("sha224")
+        with pytest.raises(InvalidHashCurveCombinationError):
+            profile = ProverProfile(user_id='user', curve=curve, hash=hash)

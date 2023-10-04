@@ -1,14 +1,23 @@
+from nizkpauth.exceptions import InvalidHashName
+
 class Hash:
     def __init__(self, name):
-        self.__config = HASH_PRESETS[name]
+        self._set_config(name)
 
+
+    def _set_config(self, name):
+        try:
+            self._config = HASH_PRESETS[name]
+        except KeyError as e:
+            raise InvalidHashName
+        
     @property
     def name(self):
-        return self.__config['name']
+        return self._config['name']
     
     @property
     def size(self):
-        return self.__config['size']
+        return self._config['size']
     
     @property
     def salt(self):

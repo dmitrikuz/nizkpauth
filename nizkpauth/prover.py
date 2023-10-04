@@ -1,14 +1,15 @@
 
 
-from dataclasses import asdict, dataclass
+from dataclasses import fields, dataclass
 from datetime import datetime
 
 from dataclasses_json import dataclass_json
 
 from nizkpauth.crypto.keys import PrivateKey
 from nizkpauth.crypto.utils import compute_challenge
+from nizkpauth.exceptions import InvalidProofFormat
 from nizkpauth.profiles import ProverProfile
-from nizkpauth.utils import encode_string
+from nizkpauth.utils import encode_string, decode_string
 
 
 class Prover:
@@ -34,7 +35,7 @@ class Prover:
         self.other_info = datetime.strftime(datetime.now(), "%H:%M:%S %d/%m/%Y")
 
     def _set_proof_value(self):
-        self.proof_value_private = PrivateKey.generate(self._profile.curve.name)
+        self.proof_value_private = PrivateKey.generate(self._profile.curve)
         self.proof_value = self.proof_value_private.public_key()
 
     def _set_residue(self):
@@ -65,3 +66,13 @@ class Proof:
 
     def to_encoded(self):
         return encode_string(self.to_json())
+    
+    @classmethod
+    def from_encoded(cls, string):
+        return cls.from_json(decode_string(string))
+    
+    def __post_init__(self):
+        for field in fields(self):
+            if not isinstance(getattr(self, field.name), field.type):
+                raise InvalidProofFormat
+

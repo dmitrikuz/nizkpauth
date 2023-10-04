@@ -11,6 +11,6 @@ def encode_string(string) -> str:
     return encoded
 
 
-def decode_encoded_string(string) -> str:
+def decode_string(string) -> str:
     decoded = base64.b64decode(string).decode()
     return decoded

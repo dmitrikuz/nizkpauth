@@ -1,6 +1,6 @@
-from crypto import utils as crypto_utils
-from crypto.keys import Key
-from profiles import Profile
+from nizkpauth.crypto.utils import compute_challenge
+from nizkpauth.crypto.keys import Key
+from nizkpauth.profiles import Profile
 
 
 class Verifier:
@@ -29,7 +29,7 @@ class Verifier:
         self._proof_value = proof_value
 
     def _set_challenge(self, proof):
-        self._challenge = crypto_utils.compute_challenge(
+        self._challenge = compute_challenge(
             public_key=self._public_key,
             curve_generator_point=self._curve_generator_point,
             hash_name=self._hash_name,

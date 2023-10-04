@@ -1,5 +1,5 @@
 from Crypto.PublicKey import ECC as ecc
-from .curves import Curve
+from nizkpauth.exceptions import InvalidKeyError
 
 class Key:
     def __init__(self, ecc_key):
@@ -14,19 +14,25 @@ class Key:
     def to_file(self, path):
         ...
 
-    @staticmethod
-    def from_file(path):
+    @classmethod
+    def from_file(cls, path):
         ...
     
-    @staticmethod
-    def from_hex(hex_string):
+    @classmethod
+    def from_hex(cls, hex_string):
         key_bytes = bytes.fromhex(hex_string)
-        key = ecc.import_key(key_bytes)
-        return __class__(key)
+        
+        try:
+            key = ecc.import_key(key_bytes)
+
+        except ValueError as e:
+            raise InvalidKeyError('Wrong key format')
+
+        return cls(key)
     
-    @staticmethod
-    def from_point_on_curve(curve, x, y):
-        return __class__(ecc.construct(curve=curve, point_x=x, point_y=y))
+    @classmethod
+    def from_point_on_curve(cls, curve, x, y):
+        return cls(ecc.construct(curve=curve, point_x=x, point_y=y))
     
     @property
     def point(self):

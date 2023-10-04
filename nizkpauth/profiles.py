@@ -2,15 +2,17 @@ import json
 from nizkpauth.crypto.keys import Key, PrivateKey
 from nizkpauth.crypto.curves import Curve
 from nizkpauth.crypto.hashes import Hash
-from nizkpauth.exceptions import InvalidProfileFormat
+from nizkpauth.exceptions import InvalidProfileFormat, InvalidHashCurveCombinationError, InvalidCurveError, InvalidHashError
 
 
 class Profile:
-    def __init__(self, user_id, curve, hash, public_key=None):
+    def __init__(self, *, user_id, curve, hash, public_key=None):
         self.user_id = user_id
         self.curve = curve
         self.hash = hash
         self.public_key = public_key
+
+        self._validate()
 
     def save_to_file(self, filename):
         with open(filename, "w") as f:
@@ -40,14 +42,16 @@ class Profile:
     @classmethod
     def from_dict(cls, profile_dict):
         deserializers = cls.get_field_deserializers()
+
         if profile_dict.keys() != deserializers.keys():
             raise InvalidProfileFormat(f'Should be {deserializers.keys()}')
         try:
             params = {
                 attr: deserializers[attr](value) for attr, value in profile_dict.items()
             }
-        except KeyError as e:
+        except KeyError:
             raise InvalidProfileFormat(f'Should be {deserializers.keys()}')
+        
 
         return cls(**params)
 
@@ -68,16 +72,24 @@ class Profile:
             "hash": lambda name: Hash(name),
             "public_key": Key.from_hex,
         }
+    
+    def _validate(self):
+        if self.hash.size < self.curve.size:
+            raise InvalidHashCurveCombinationError('Hash size should be at least equal to curve subgroup order')
+        
 
 
 class ProverProfile(Profile):
-    def __init__(self, user_id, curve, hash, public_key=None, private_key=None):
-        super().__init__(user_id, curve, hash, public_key)
+    def __init__(self, private_key=None, **kwargs):
+        super().__init__(**kwargs)
         self.private_key = private_key
 
     def generate_keys(self):
         private_key = PrivateKey.generate(self.curve)
         self.public_key, self.private_key = private_key.public_key(), private_key
+
+    def to_public(self):
+        return Profile(**{k: v for k, v in vars(self).items() if k != 'private_key'})
 
     @classmethod
     def get_field_serializers(cls):
