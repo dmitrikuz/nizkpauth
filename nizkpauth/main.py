@@ -1,8 +1,10 @@
 import argparse
-from profiles import ProverProfile
-from prover import Prover
+from nizkpauth.profiles import ProverProfile
+from nizkpauth.prover import Prover
+from nizkpauth.crypto.curves import Curve
+from nizkpauth.crypto.hashes import Hash
 
-if __name__ == "__main__":
+def main():
     parser = argparse.ArgumentParser(
         prog="NIZKP Client",
         description="Generates profile and proof for authentication based on NIZKP",
@@ -20,10 +22,10 @@ if __name__ == "__main__":
 
     if args.action == "profile":
         user = args.user
-        curve_name = args.curve
-        hash_name = args.hash
+        curve_name = Curve(args.curve)
+        hash_name = Hash(args.hash)
         
-        p = ProverProfile(user, curve=curve_name, hash=hash_name)
+        p = ProverProfile(user_id=user, curve=curve_name, hash=hash_name)
         p.generate_keys()
 
         if args.filename is not None:
@@ -41,3 +43,7 @@ if __name__ == "__main__":
                 proof = proof.to_json()
 
             print(proof)
+
+
+if __name__ == "__main__":
+    main()
