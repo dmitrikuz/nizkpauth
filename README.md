@@ -1,8 +1,6 @@
 # nizkpauth
 The program and python package used for creating and verifying non-interactive zero-knowledge proofs
 
-Inspired by the idea of [Zero-knowledge proofs (ZKP)](https://en.wikipedia.org/wiki/Zero-knowledge_proof)
-
 Based on [RFC-8235](https://datatracker.ietf.org/doc/html/rfc8235#ref-FIPS186-4)
 
 ## Installation
