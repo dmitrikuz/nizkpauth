@@ -1,5 +1,5 @@
 # nizkpauth
-The program and python package used for creating and verifying non-interactive zero-knowledge proofs
+Lightweight program and python package used for creating and verifying non-interactive zero-knowledge proofs
 
 Based on [RFC-8235](https://datatracker.ietf.org/doc/html/rfc8235#ref-FIPS186-4)
 
