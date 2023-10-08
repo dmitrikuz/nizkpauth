@@ -5,6 +5,7 @@ import pytest
 
 from nizkpauth.crypto.curves import Curve
 from nizkpauth.crypto.hashes import Hash
+from nizkpauth.crypto.keys import PrivateKey
 from nizkpauth.exceptions import (InvalidCurveError,
                                   InvalidHashCurveCombinationError,
                                   InvalidHashError, InvalidProfileFormat)
@@ -14,6 +15,8 @@ from nizkpauth.profiles import Profile, ProverProfile
 class TestProverProfileWithValidInput:
     curve = Curve("p256")
     hash = Hash("sha256")
+    private_key = PrivateKey.generate(curve)
+    public_key = private_key.public_key()
     user_id = "user@email"
     filepath = f"profiles/{user_id}.json"
 
@@ -21,13 +24,13 @@ class TestProverProfileWithValidInput:
         try:
             profile = ProverProfile(user_id=self.user_id, curve=self.curve, hash=self.hash)
             profile.generate_keys()
+            self.profile = profile
 
         except Exception as e:
             assert False, f"Exception {e} was raised"
 
     def test_from_dict_creation(self):
-        with open(self.filepath, "r") as f:
-            profile_data = json.load(f)
+        profile_data = {'user_id': self.user_id, 'curve': self.curve.name, 'hash': self.hash.name, 'public_key': self.public_key.to_hex(), 'private_key': self.private_key.to_hex()}
 
         try:
             loaded_profile = ProverProfile.from_dict(profile_data)
@@ -40,9 +43,8 @@ class TestProverProfileWithValidInput:
         )
 
     def test_to_dict_conversion(self):
+        profile = ProverProfile(user_id=self.user_id, curve=self.curve, hash=self.hash, private_key=self.private_key, public_key=self.public_key)
         try:
-            profile = ProverProfile(user_id=self.user_id, curve=self.curve, hash=self.hash)
-            profile.generate_keys()
             profile_dict = profile.to_dict()
 
         except Exception as e:
@@ -53,25 +55,27 @@ class TestProverProfileWithValidInput:
         )
 
     def test_json_export(self):
-        loaded_profile = ProverProfile.load_from_file(self.filepath)
-
-        with open(self.filepath, "r") as f:
-            json_string = f.read()
+        profile = ProverProfile(user_id=self.user_id, curve=self.curve, hash=self.hash)
+        profile.generate_keys()
+        profile_data = {'user_id': self.user_id, 'curve': self.curve.name, 'hash': self.hash.name, 'public_key': profile.public_key.to_hex(), 'private_key': profile.private_key.to_hex()}
+        profile_data_json = json.dumps(profile_data, indent=4)
+        
 
         try:
-            loaded_profile_json = loaded_profile.export_json()
+            loaded_profile_json = profile.export_json()
 
         except Exception as e:
             assert False, f"Exception {e} was raised"
 
-        assert json_string == loaded_profile_json
+        assert profile_data_json == loaded_profile_json
+
 
     def test_json_import(self):
-        with open(self.filepath, "r") as f:
-            json_string = f.read()
+        profile_data = {'user_id': self.user_id, 'curve': self.curve.name, 'hash': self.hash.name, 'public_key': self.public_key.to_hex(), 'private_key': self.private_key.to_hex()}
+        profile_data_json = json.dumps(profile_data)
 
         try:
-            loaded_profile = ProverProfile.import_json(json_string)
+            loaded_profile = ProverProfile.import_json(profile_data_json)
 
         except Exception as e:
             assert False, f"Exception {e} was raised"
@@ -81,7 +85,7 @@ class TestProverProfileWithValidInput:
         )
 
     def test_save_in_file(self):
-        test_path = 'profiles/test.json'
+        test_path = 'profiles/test_private.json'
         try:
             profile = ProverProfile(user_id=self.user_id, curve=self.curve, hash=self.hash)
             profile.generate_keys()
@@ -93,9 +97,9 @@ class TestProverProfileWithValidInput:
         assert os.path.isfile(test_path)
 
     def test_load_from_file(self):
-
+        test_path = 'profiles/test_private.json'
         try:
-            loaded_profile = ProverProfile.load_from_file(self.filepath)
+            loaded_profile = ProverProfile.load_from_file(test_path)
 
         except Exception as e:
             assert False, f"Exception {e} was raised"
@@ -107,8 +111,14 @@ class TestProverProfileWithValidInput:
 
 
 class TestPublicProfileWithValidInput:
-    user_id = "user@email"
-    filepath = f"profiles/{user_id}_public.json"
+    filepath = 'profiles/test_public.json'
+
+    def test_save_to_file(self):
+        
+        profile = ProverProfile(user_id='test_public', curve=Curve('p256'), hash=Hash('sha256'))
+        profile.generate_keys()
+        profile = profile.to_public()
+        profile.save_to_file(self.filepath)
 
     def test_load_from_file(self):
         try:
@@ -123,9 +133,8 @@ class TestPublicProfileWithValidInput:
 
 
 class TestProfileWithInvalidInput:
-    user_id = "user@email"
-    filepath_private = f"profiles/{user_id}.json"
-    filepath_public = f"profiles/{user_id}_public.json"
+    filepath_private = f"profiles/test_private.json"
+    filepath_public = f"profiles/test_public.json"
 
     def test_load_public_from_private_format(self):
         with pytest.raises(InvalidProfileFormat):

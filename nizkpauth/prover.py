@@ -69,10 +69,12 @@ class Proof:
     
     @classmethod
     def from_encoded(cls, string):
-        return cls.from_json(decode_string(string))
+        try:
+            return cls.from_json(decode_string(string))
+        except (KeyError, UnicodeDecodeError):
+            raise InvalidProofFormat
     
     def __post_init__(self):
         for field in fields(self):
             if not isinstance(getattr(self, field.name), field.type):
                 raise InvalidProofFormat
-

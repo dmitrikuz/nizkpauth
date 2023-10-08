@@ -31,6 +31,8 @@ def main():
         if args.filename is not None:
             p.save_to_file(args.filename)
 
+        print(p.export_json())
+
     else:
         if args.filename is not None:
             profile = ProverProfile.load_from_file(args.filename)

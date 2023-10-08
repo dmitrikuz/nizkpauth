@@ -1,12 +1,14 @@
 from Crypto.PublicKey import ECC as ecc
 from nizkpauth.exceptions import InvalidKeyError
+import binascii
 
 class Key:
     def __init__(self, ecc_key):
         self._ecc_key = ecc_key
 
     def to_hex(self):
-        return self._ecc_key.export_key(format="DER").hex()
+        der_bytes = self._ecc_key.export_key(format='DER')
+        return binascii.b2a_hex(der_bytes).decode()
     
     def to_binary(self):
         return self._ecc_key.export_key(format='raw')
@@ -20,8 +22,8 @@ class Key:
     
     @classmethod
     def from_hex(cls, hex_string):
-        key_bytes = bytes.fromhex(hex_string)
-        
+        key_bytes = binascii.a2b_hex(hex_string)
+
         try:
             key = ecc.import_key(key_bytes)
 
@@ -29,6 +31,8 @@ class Key:
             raise InvalidKeyError('Wrong key format')
 
         return cls(key)
+    
+    
     
     @classmethod
     def from_point_on_curve(cls, curve, x, y):
@@ -51,4 +55,3 @@ class PrivateKey(Key):
     @property
     def private_component(self):
         return self._ecc_key.d
-

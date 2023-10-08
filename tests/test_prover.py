@@ -7,7 +7,7 @@ import re
 import pytest
 
 USER_ID = 'user@email'
-FILEPATH = f"profiles/{USER_ID}.json"
+FILEPATH = f"profiles/test_private.json"
 
 class TestProverWithValidInput:
     def test_prover_creation(self):
