@@ -6,9 +6,12 @@ import pytest
 from nizkpauth.crypto.curves import Curve
 from nizkpauth.crypto.hashes import Hash
 from nizkpauth.crypto.keys import PrivateKey
-from nizkpauth.exceptions import (InvalidCurveError,
-                                  InvalidHashCurveCombinationError,
-                                  InvalidHashError, InvalidProfileFormat)
+from nizkpauth.exceptions import (
+    InvalidCurveError,
+    InvalidHashCurveCombinationError,
+    InvalidHashError,
+    InvalidProfileFormat,
+)
 from nizkpauth.profiles import Profile, ProverProfile
 
 
@@ -22,7 +25,9 @@ class TestProverProfileWithValidInput:
 
     def test_creation_with_valid_parameters(self):
         try:
-            profile = ProverProfile(user_id=self.user_id, curve=self.curve, hash=self.hash)
+            profile = ProverProfile(
+                user_id=self.user_id, curve=self.curve, hash=self.hash
+            )
             profile.generate_keys()
             self.profile = profile
 
@@ -30,7 +35,13 @@ class TestProverProfileWithValidInput:
             assert False, f"Exception {e} was raised"
 
     def test_from_dict_creation(self):
-        profile_data = {'user_id': self.user_id, 'curve': self.curve.name, 'hash': self.hash.name, 'public_key': self.public_key.to_hex(), 'private_key': self.private_key.to_hex()}
+        profile_data = {
+            "user_id": self.user_id,
+            "curve": self.curve.name,
+            "hash": self.hash.name,
+            "public_key": self.public_key.to_str(),
+            "private_key": self.private_key.to_str(),
+        }
 
         try:
             loaded_profile = ProverProfile.from_dict(profile_data)
@@ -43,7 +54,13 @@ class TestProverProfileWithValidInput:
         )
 
     def test_to_dict_conversion(self):
-        profile = ProverProfile(user_id=self.user_id, curve=self.curve, hash=self.hash, private_key=self.private_key, public_key=self.public_key)
+        profile = ProverProfile(
+            user_id=self.user_id,
+            curve=self.curve,
+            hash=self.hash,
+            private_key=self.private_key,
+            public_key=self.public_key,
+        )
         try:
             profile_dict = profile.to_dict()
 
@@ -57,9 +74,14 @@ class TestProverProfileWithValidInput:
     def test_json_export(self):
         profile = ProverProfile(user_id=self.user_id, curve=self.curve, hash=self.hash)
         profile.generate_keys()
-        profile_data = {'user_id': self.user_id, 'curve': self.curve.name, 'hash': self.hash.name, 'public_key': profile.public_key.to_hex(), 'private_key': profile.private_key.to_hex()}
+        profile_data = {
+            "user_id": self.user_id,
+            "curve": self.curve.name,
+            "hash": self.hash.name,
+            "public_key": profile.public_key.to_str(),
+            "private_key": profile.private_key.to_str(),
+        }
         profile_data_json = json.dumps(profile_data, indent=4)
-        
 
         try:
             loaded_profile_json = profile.export_json()
@@ -69,9 +91,14 @@ class TestProverProfileWithValidInput:
 
         assert profile_data_json == loaded_profile_json
 
-
     def test_json_import(self):
-        profile_data = {'user_id': self.user_id, 'curve': self.curve.name, 'hash': self.hash.name, 'public_key': self.public_key.to_hex(), 'private_key': self.private_key.to_hex()}
+        profile_data = {
+            "user_id": self.user_id,
+            "curve": self.curve.name,
+            "hash": self.hash.name,
+            "public_key": self.public_key.to_str(),
+            "private_key": self.private_key.to_str(),
+        }
         profile_data_json = json.dumps(profile_data)
 
         try:
@@ -85,9 +112,11 @@ class TestProverProfileWithValidInput:
         )
 
     def test_save_in_file(self):
-        test_path = 'profiles/test_private.json'
+        test_path = "profiles/test_private.json"
         try:
-            profile = ProverProfile(user_id=self.user_id, curve=self.curve, hash=self.hash)
+            profile = ProverProfile(
+                user_id=self.user_id, curve=self.curve, hash=self.hash
+            )
             profile.generate_keys()
             profile.save_to_file(test_path)
 
@@ -97,7 +126,7 @@ class TestProverProfileWithValidInput:
         assert os.path.isfile(test_path)
 
     def test_load_from_file(self):
-        test_path = 'profiles/test_private.json'
+        test_path = "profiles/test_private.json"
         try:
             loaded_profile = ProverProfile.load_from_file(test_path)
 
@@ -109,13 +138,13 @@ class TestProverProfileWithValidInput:
         )
 
 
-
 class TestPublicProfileWithValidInput:
-    filepath = 'profiles/test_public.json'
+    filepath = "profiles/test_public.json"
 
     def test_save_to_file(self):
-        
-        profile = ProverProfile(user_id='test_public', curve=Curve('p256'), hash=Hash('sha256'))
+        profile = ProverProfile(
+            user_id="test_public", curve=Curve("p256"), hash=Hash("sha256")
+        )
         profile.generate_keys()
         profile = profile.to_public()
         profile.save_to_file(self.filepath)
@@ -145,21 +174,19 @@ class TestProfileWithInvalidInput:
             profile = ProverProfile.load_from_file(self.filepath_public)
 
     def test_invalid_hash(self):
-
         with pytest.raises(InvalidHashError):
             curve = Curve("p256")
             hash = Hash("Non existing hash")
-            profile = ProverProfile(user_id='user', curve=curve, hash=hash)
+            profile = ProverProfile(user_id="user", curve=curve, hash=hash)
 
     def test_invalid_curve(self):
         with pytest.raises(InvalidCurveError):
             curve = Curve("Non existing curve")
             hash = Hash("sha256")
-            profile = ProverProfile(user_id='user', curve=curve, hash=hash)
-
+            profile = ProverProfile(user_id="user", curve=curve, hash=hash)
 
     def test_invalid_hash_curve_combination(self):
         curve = Curve("p256")
         hash = Hash("sha224")
         with pytest.raises(InvalidHashCurveCombinationError):
-            profile = ProverProfile(user_id='user', curve=curve, hash=hash)
+            profile = ProverProfile(user_id="user", curve=curve, hash=hash)

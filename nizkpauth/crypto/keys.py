@@ -1,6 +1,9 @@
-from Crypto.PublicKey import ECC as ecc
-from nizkpauth.exceptions import InvalidKeyError
 import binascii
+
+from Crypto.PublicKey import ECC as ecc
+
+from nizkpauth.exceptions import InvalidKeyError
+
 
 class Key:
     def __init__(self, ecc_key):
@@ -9,6 +12,10 @@ class Key:
     def to_hex(self):
         der_bytes = self._ecc_key.export_key(format='DER')
         return binascii.b2a_hex(der_bytes).decode()
+    
+    def to_b64(self):
+        der_bytes = self._ecc_key.export_key(format='DER')
+        return binascii.b2a_base64(der_bytes).decode()
     
     def to_binary(self):
         return self._ecc_key.export_key(format='raw')
@@ -23,9 +30,22 @@ class Key:
     @classmethod
     def from_hex(cls, hex_string):
         key_bytes = binascii.a2b_hex(hex_string)
+        key = ecc.import_key(key_bytes)
+        return key
+    
+    @classmethod
+    def from_b64(cls, string):
+        key_bytes = binascii.a2b_base64(string)
+        key = ecc.import_key(key_bytes)
+        return key
 
+    def to_str(self):
+        return self.to_b64()
+    
+    @classmethod
+    def from_str(cls, string):
         try:
-            key = ecc.import_key(key_bytes)
+            key = cls.from_b64(string)
 
         except ValueError as e:
             raise InvalidKeyError('Wrong key format')

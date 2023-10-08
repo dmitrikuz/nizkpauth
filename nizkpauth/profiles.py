@@ -61,7 +61,7 @@ class Profile:
             "user_id": lambda x: x,
             "curve": lambda curve: curve.name,
             "hash": lambda hash: hash.name,
-            "public_key": Key.to_hex,
+            "public_key": Key.to_str,
         }
 
     @classmethod
@@ -70,7 +70,7 @@ class Profile:
             "user_id": lambda x: x,
             "curve": lambda name: Curve(name),
             "hash": lambda name: Hash(name),
-            "public_key": Key.from_hex,
+            "public_key": Key.from_str,
         }
     
     def _validate(self):
@@ -93,8 +93,8 @@ class ProverProfile(Profile):
 
     @classmethod
     def get_field_serializers(cls):
-        return {**super().get_field_serializers(), **{"private_key": PrivateKey.to_hex}}
+        return {**super().get_field_serializers(), **{"private_key": PrivateKey.to_str}}
 
     @classmethod
     def get_field_deserializers(cls):
-        return {**super().get_field_deserializers(),**{"private_key": PrivateKey.from_hex}}
+        return {**super().get_field_deserializers(),**{"private_key": PrivateKey.from_str}}
