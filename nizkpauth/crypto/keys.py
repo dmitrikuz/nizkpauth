@@ -12,34 +12,41 @@ class Key:
         self._ecc_key = ecc_key
 
     def to_hex(self):
-        der_bytes = self.to_der()
+        der_bytes = self._to_short_der()
         return binascii.b2a_hex(der_bytes).decode()
 
     @classmethod
     def from_hex(cls, hex_string):
         key_bytes = binascii.a2b_hex(hex_string)
-        key = cls.from_der(key_bytes, missing_bytes=True)
+        key = cls._from_short_der(key_bytes)
         return key
 
     def to_b64(self):
-        der_bytes = self.to_der()
+        der_bytes = self._to_short_der()
         return binascii.b2a_base64(der_bytes, newline=False).decode()
 
     @classmethod
     def from_b64(cls, string):
         key_bytes = binascii.a2b_base64(string)
-        key = cls.from_der(key_bytes, missing_bytes=True)
+        key = cls._from_short_der(key_bytes)
         return key
 
-    def to_der(self):
+    @classmethod
+    def _from_short_der(cls, der_bytes):
+        key = ecc.import_key(cls.fixed_der_starting_bytes + der_bytes)
+        return cls(key)
+
+    def _to_short_der(self):
         return self._ecc_key.export_key(format="DER")[
             len(self.fixed_der_starting_bytes) :
         ]
 
+    def to_der(self):
+        return self._ecc_key.export_key(format="DER")
+
     @classmethod
-    def from_der(cls, der_bytes, missing_bytes=False):
-        added_part = cls.fixed_der_starting_bytes if missing_bytes else b""
-        key = ecc.import_key(added_part + der_bytes)
+    def from_der(cls, der_bytes):
+        key = ecc.import_key(der_bytes)
         return cls(key)
 
     def to_binary(self):

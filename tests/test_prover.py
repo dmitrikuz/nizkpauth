@@ -1,13 +1,16 @@
-from nizkpauth.prover import Prover, Proof
-from nizkpauth.profiles import ProverProfile
-from nizkpauth.exceptions import InvalidProofFormat
-
 import json
 import re
+
 import pytest
 
+from nizkpauth.exceptions import InvalidProofFormat
+from nizkpauth.profiles import ProverProfile
+from nizkpauth.prover import Proof, Prover
+
+from .test_profiles import PWD
+
 USER_ID = 'user@email'
-FILEPATH = f"profiles/test_private.json"
+FILEPATH = PWD / "profiles/test_private.json"
 
 class TestProverWithValidInput:
     def test_prover_creation(self):

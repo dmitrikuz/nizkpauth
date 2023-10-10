@@ -14,6 +14,11 @@ from nizkpauth.exceptions import (
 )
 from nizkpauth.profiles import Profile, ProverProfile
 
+from pathlib import Path
+
+
+PWD = Path(__file__).resolve().parent.parent
+
 
 class TestProverProfileWithValidInput:
     curve = Curve("p256")
@@ -21,7 +26,9 @@ class TestProverProfileWithValidInput:
     private_key = PrivateKey.generate(curve)
     public_key = private_key.public_key()
     user_id = "user@email"
-    filepath = f"profiles/{user_id}.json"
+    filepath = PWD / "profiles/{user_id}.json"
+    test_private_filepath = PWD  / "profiles/test_private.json"
+    test_public_filepath = PWD  / "profiles/test_public.json"
 
     def test_creation_with_valid_parameters(self):
         try:
@@ -112,7 +119,7 @@ class TestProverProfileWithValidInput:
         )
 
     def test_save_in_file(self):
-        test_path = "profiles/test_private.json"
+        test_path = self.test_private_filepath
         try:
             profile = ProverProfile(
                 user_id=self.user_id, curve=self.curve, hash=self.hash
@@ -126,7 +133,7 @@ class TestProverProfileWithValidInput:
         assert os.path.isfile(test_path)
 
     def test_load_from_file(self):
-        test_path = "profiles/test_private.json"
+        test_path = self.test_private_filepath
         try:
             loaded_profile = ProverProfile.load_from_file(test_path)
 
@@ -139,7 +146,7 @@ class TestProverProfileWithValidInput:
 
 
 class TestPublicProfileWithValidInput:
-    filepath = "profiles/test_public.json"
+    filepath = PWD / "profiles/test_public.json"
 
     def test_save_to_file(self):
         profile = ProverProfile(
@@ -162,8 +169,8 @@ class TestPublicProfileWithValidInput:
 
 
 class TestProfileWithInvalidInput:
-    filepath_private = f"profiles/test_private.json"
-    filepath_public = f"profiles/test_public.json"
+    filepath_private = PWD / "profiles/test_private.json"
+    filepath_public =  PWD / "profiles/test_public.json"
 
     def test_load_public_from_private_format(self):
         with pytest.raises(InvalidProfileFormat):
