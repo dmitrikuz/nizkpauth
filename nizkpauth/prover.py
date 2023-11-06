@@ -17,43 +17,45 @@ class Prover:
         self._profile = profile
 
     def create_proof(self):
-        self._set_other_info()
-        self._set_proof_value()
-        self._set_challenge()
-        self._set_residue()
+        other_info = self._other_info()
+        proof_value_private, proof_value_public = self._proof_values_pair()
+        challenge = self._challenge(proof_value_public, other_info)
+        residue = self._residue(proof_value_private, challenge)
 
         proof = Proof(
             self._profile.user_id, 
-            self.other_info, 
-            self.residue, 
-            self.challenge
+            other_info, 
+            residue, 
+            challenge
         )
 
         return proof
 
-    def _set_other_info(self):
-        self.other_info = datetime.strftime(datetime.now(), "%H:%M:%S %d/%m/%Y")
+    def _other_info(self):
+        return datetime.strftime(datetime.now(), "%H:%M:%S %d/%m/%Y")
 
-    def _set_proof_value(self):
-        self.proof_value_private = PrivateKey.generate(self._profile.curve)
-        self.proof_value = self.proof_value_private.public_key()
+    def _proof_values_pair(self):
+        proof_value_private = PrivateKey.generate(self._profile.curve)
+        proof_value_public = proof_value_private.public_key()
+        return proof_value_private, proof_value_public
 
-    def _set_residue(self):
-        residue = (
-            self.proof_value_private.private_component - self._profile.private_key.private_component * self.challenge
-        ) % self._profile.curve.order
-        self.residue = int(residue)
-
-    def _set_challenge(self):
-        self.challenge = compute_challenge(
+    def _challenge(self, proof_value_public, other_info):
+        challenge = compute_challenge(
             curve_generator_point=self._profile.curve.base_point_as_key,
-            proof_value=self.proof_value,
+            proof_value=proof_value_public,
             public_key=self._profile.public_key,
             user_id=self._profile.user_id,
-            other_info=self.other_info,
+            other_info=other_info,
             hash_name=self._profile.hash.name,
         )
+        return challenge
 
+    def _residue(self, proof_value_private, challenge):
+        residue = (
+            proof_value_private.private_component - self._profile.private_key.private_component * challenge
+        ) % self._profile.curve.order
+        residue = int(residue)
+        return residue
 
 
 @dataclass_json
